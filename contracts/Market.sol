@@ -7,13 +7,27 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "hardhat/console.sol";
 
 contract NFTMarket is ReentrancyGuard {
+
+/**
+ * @title Counters
+ * @author Matt Condon (@shrugs)
+ * @dev Provides counters that can only be incremented, decremented or reset. This can be used e.g. to track the number
+ * of elements in a mapping, issuing ERC721 ids, or counting request ids.
+ *
+ * Include with `using Counters for Counters.Counter;`
+ */
+
   using Counters for Counters.Counter;
   Counters.Counter private _itemIds;
   Counters.Counter private _itemsSold;
 
-  address payable owner;
+  // You can use .transfer(..) and .send(..) on address payable, but not on address.
+  address payable owner; 
+
+
   uint256 listingPrice = 0.025 ether;
 
+// A constructor is an optional function that is executed upon contract creation.
   constructor() {
     owner = payable(msg.sender);
   }
