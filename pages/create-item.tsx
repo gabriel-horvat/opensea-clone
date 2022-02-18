@@ -45,12 +45,15 @@ export default function CreateItem() {
       const added = await client.add(data);
       const url = `https://ipfs.infura.io/ipfs/${added.path}`;
       /* after file is uploaded to IPFS, pass the URL to save it on Polygon */
+      console.log("IPFS upload successful. Now createSale(url)");
+
       createSale(url);
     } catch (error) {
       console.log("Error uploading file: ", error);
     }
   }
 
+  // bug is in the create sale function somewhere
   async function createSale(url) {
     const web3Modal = new Web3Modal();
     const connection = await web3Modal.connect();
@@ -69,12 +72,16 @@ export default function CreateItem() {
 
     /* then list the item for sale on the marketplace */
     contract = new ethers.Contract(nftmarketaddress, Market.abi, signer);
+    console.log("new nftMarket contract");
+
     let listingPrice = await contract.getListingPrice();
     listingPrice = listingPrice.toString();
 
     transaction = await contract.createMarketItem(nftaddress, tokenId, price, {
       value: listingPrice,
     });
+    console.log("createMarketItem");
+
     await transaction.wait();
     router.push("/");
   }
