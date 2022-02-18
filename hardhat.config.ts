@@ -3,7 +3,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-import * as fs from "fs";
+const fs = require("fs");
 
 const privateKey =
   fs.readFileSync(".secret").toString().trim() || "01234567890123456789";
