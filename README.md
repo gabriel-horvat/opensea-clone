@@ -1,4 +1,4 @@
-# Basic Opensea Clone
+# Opensea Clone
 
 Following along this NFT Marketplace tutorial:
 
@@ -24,3 +24,4 @@ My owned NFTs:
 
 My listed NFTs:
 ![Screen Shot 2022-02-28 at 4 07 48 PM](https://user-images.githubusercontent.com/36449086/155999097-3966472b-29ea-4d39-bca8-7976498d45d3.png)
+-----
