@@ -9,8 +9,7 @@ export type { IERC721Receiver } from "./IERC721Receiver";
 export type { ERC165 } from "./ERC165";
 export type { IERC165 } from "./IERC165";
 export type { Greeter } from "./Greeter";
-export type { NFTMarket } from "./NFTMarket";
-export type { NFT } from "./NFT";
+export type { NFTMarketplace } from "./NFTMarketplace";
 
 export { ERC721__factory } from "./factories/ERC721__factory";
 export { ERC721URIStorage__factory } from "./factories/ERC721URIStorage__factory";
@@ -20,5 +19,4 @@ export { IERC721Receiver__factory } from "./factories/IERC721Receiver__factory";
 export { ERC165__factory } from "./factories/ERC165__factory";
 export { IERC165__factory } from "./factories/IERC165__factory";
 export { Greeter__factory } from "./factories/Greeter__factory";
-export { NFTMarket__factory } from "./factories/NFTMarket__factory";
-export { NFT__factory } from "./factories/NFT__factory";
+export { NFTMarketplace__factory } from "./factories/NFTMarketplace__factory";

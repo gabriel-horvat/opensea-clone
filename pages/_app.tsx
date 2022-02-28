@@ -11,13 +11,13 @@ function MyApp({ Component, pageProps }) {
           <Link href="/">
             <a className="mr-4 text-pink-500">Home</a>
           </Link>
-          <Link href="/create-item">
+          <Link href="/create-nft">
             <a className="mr-6 text-pink-500">Sell NFT</a>
           </Link>
-          <Link href="/my-assets">
+          <Link href="/my-nfts">
             <a className="mr-6 text-pink-500">My NFTs</a>
           </Link>
-          <Link href="/creator-dashboard">
+          <Link href="/dashboard">
             <a className="mr-6 text-pink-500"> Dashboard</a>
           </Link>
         </div>

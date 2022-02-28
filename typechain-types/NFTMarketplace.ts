@@ -9,6 +9,7 @@ import {
   CallOverrides,
   ContractTransaction,
   Overrides,
+  PayableOverrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -17,22 +18,53 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
-export interface NFTInterface extends utils.Interface {
-  contractName: "NFT";
+export declare namespace NFTMarketplace {
+  export type MarketItemStruct = {
+    tokenId: BigNumberish;
+    seller: string;
+    owner: string;
+    price: BigNumberish;
+    sold: boolean;
+  };
+
+  export type MarketItemStructOutput = [
+    BigNumber,
+    string,
+    string,
+    BigNumber,
+    boolean
+  ] & {
+    tokenId: BigNumber;
+    seller: string;
+    owner: string;
+    price: BigNumber;
+    sold: boolean;
+  };
+}
+
+export interface NFTMarketplaceInterface extends utils.Interface {
+  contractName: "NFTMarketplace";
   functions: {
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
-    "createToken(string)": FunctionFragment;
+    "createMarketSale(uint256)": FunctionFragment;
+    "createToken(string,uint256)": FunctionFragment;
+    "fetchItemsListed()": FunctionFragment;
+    "fetchMarketItems()": FunctionFragment;
+    "fetchMyNFTs()": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
+    "getListingPrice()": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
     "name()": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
+    "resellToken(uint256,uint256)": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
     "tokenURI(uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
+    "updateListingPrice(uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -40,10 +72,33 @@ export interface NFTInterface extends utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
-  encodeFunctionData(functionFragment: "createToken", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "createMarketSale",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "createToken",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "fetchItemsListed",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "fetchMarketItems",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "fetchMyNFTs",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getListingPrice",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "isApprovedForAll",
@@ -53,6 +108,10 @@ export interface NFTInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "ownerOf",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "resellToken",
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "safeTransferFrom",
@@ -75,15 +134,39 @@ export interface NFTInterface extends utils.Interface {
     functionFragment: "transferFrom",
     values: [string, string, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "updateListingPrice",
+    values: [BigNumberish]
+  ): string;
 
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "createMarketSale",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "createToken",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "fetchItemsListed",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "fetchMarketItems",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "fetchMyNFTs",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getApproved",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getListingPrice",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -92,6 +175,10 @@ export interface NFTInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "resellToken",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "safeTransferFrom",
     data: BytesLike
@@ -110,15 +197,21 @@ export interface NFTInterface extends utils.Interface {
     functionFragment: "transferFrom",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateListingPrice",
+    data: BytesLike
+  ): Result;
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
     "ApprovalForAll(address,address,bool)": EventFragment;
+    "MarketItemCreated(uint256,address,address,uint256,bool)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "MarketItemCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
 
@@ -136,6 +229,20 @@ export type ApprovalForAllEvent = TypedEvent<
 
 export type ApprovalForAllEventFilter = TypedEventFilter<ApprovalForAllEvent>;
 
+export type MarketItemCreatedEvent = TypedEvent<
+  [BigNumber, string, string, BigNumber, boolean],
+  {
+    tokenId: BigNumber;
+    seller: string;
+    owner: string;
+    price: BigNumber;
+    sold: boolean;
+  }
+>;
+
+export type MarketItemCreatedEventFilter =
+  TypedEventFilter<MarketItemCreatedEvent>;
+
 export type TransferEvent = TypedEvent<
   [string, string, BigNumber],
   { from: string; to: string; tokenId: BigNumber }
@@ -143,13 +250,13 @@ export type TransferEvent = TypedEvent<
 
 export type TransferEventFilter = TypedEventFilter<TransferEvent>;
 
-export interface NFT extends BaseContract {
-  contractName: "NFT";
+export interface NFTMarketplace extends BaseContract {
+  contractName: "NFTMarketplace";
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: NFTInterface;
+  interface: NFTMarketplaceInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
@@ -179,15 +286,35 @@ export interface NFT extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    createMarketSale(
+      tokenId: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     createToken(
       tokenURI: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+      price: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    fetchItemsListed(
+      overrides?: CallOverrides
+    ): Promise<[NFTMarketplace.MarketItemStructOutput[]]>;
+
+    fetchMarketItems(
+      overrides?: CallOverrides
+    ): Promise<[NFTMarketplace.MarketItemStructOutput[]]>;
+
+    fetchMyNFTs(
+      overrides?: CallOverrides
+    ): Promise<[NFTMarketplace.MarketItemStructOutput[]]>;
 
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
+
+    getListingPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     isApprovedForAll(
       owner: string,
@@ -201,6 +328,12 @@ export interface NFT extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
+
+    resellToken(
+      tokenId: BigNumberish,
+      price: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -241,6 +374,11 @@ export interface NFT extends BaseContract {
       tokenId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    updateListingPrice(
+      _listingPrice: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   approve(
@@ -251,15 +389,35 @@ export interface NFT extends BaseContract {
 
   balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+  createMarketSale(
+    tokenId: BigNumberish,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   createToken(
     tokenURI: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
+    price: BigNumberish,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  fetchItemsListed(
+    overrides?: CallOverrides
+  ): Promise<NFTMarketplace.MarketItemStructOutput[]>;
+
+  fetchMarketItems(
+    overrides?: CallOverrides
+  ): Promise<NFTMarketplace.MarketItemStructOutput[]>;
+
+  fetchMyNFTs(
+    overrides?: CallOverrides
+  ): Promise<NFTMarketplace.MarketItemStructOutput[]>;
 
   getApproved(
     tokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
+
+  getListingPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
   isApprovedForAll(
     owner: string,
@@ -270,6 +428,12 @@ export interface NFT extends BaseContract {
   name(overrides?: CallOverrides): Promise<string>;
 
   ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+  resellToken(
+    tokenId: BigNumberish,
+    price: BigNumberish,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   "safeTransferFrom(address,address,uint256)"(
     from: string,
@@ -308,6 +472,11 @@ export interface NFT extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  updateListingPrice(
+    _listingPrice: BigNumberish,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     approve(
       to: string,
@@ -317,15 +486,35 @@ export interface NFT extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    createMarketSale(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     createToken(
       tokenURI: string,
+      price: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    fetchItemsListed(
+      overrides?: CallOverrides
+    ): Promise<NFTMarketplace.MarketItemStructOutput[]>;
+
+    fetchMarketItems(
+      overrides?: CallOverrides
+    ): Promise<NFTMarketplace.MarketItemStructOutput[]>;
+
+    fetchMyNFTs(
+      overrides?: CallOverrides
+    ): Promise<NFTMarketplace.MarketItemStructOutput[]>;
 
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    getListingPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     isApprovedForAll(
       owner: string,
@@ -336,6 +525,12 @@ export interface NFT extends BaseContract {
     name(overrides?: CallOverrides): Promise<string>;
 
     ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+    resellToken(
+      tokenId: BigNumberish,
+      price: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -373,6 +568,11 @@ export interface NFT extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    updateListingPrice(
+      _listingPrice: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {
@@ -398,6 +598,21 @@ export interface NFT extends BaseContract {
       approved?: null
     ): ApprovalForAllEventFilter;
 
+    "MarketItemCreated(uint256,address,address,uint256,bool)"(
+      tokenId?: BigNumberish | null,
+      seller?: null,
+      owner?: null,
+      price?: null,
+      sold?: null
+    ): MarketItemCreatedEventFilter;
+    MarketItemCreated(
+      tokenId?: BigNumberish | null,
+      seller?: null,
+      owner?: null,
+      price?: null,
+      sold?: null
+    ): MarketItemCreatedEventFilter;
+
     "Transfer(address,address,uint256)"(
       from?: string | null,
       to?: string | null,
@@ -419,15 +634,29 @@ export interface NFT extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    createMarketSale(
+      tokenId: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     createToken(
       tokenURI: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+      price: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    fetchItemsListed(overrides?: CallOverrides): Promise<BigNumber>;
+
+    fetchMarketItems(overrides?: CallOverrides): Promise<BigNumber>;
+
+    fetchMyNFTs(overrides?: CallOverrides): Promise<BigNumber>;
 
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    getListingPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     isApprovedForAll(
       owner: string,
@@ -440,6 +669,12 @@ export interface NFT extends BaseContract {
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    resellToken(
+      tokenId: BigNumberish,
+      price: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     "safeTransferFrom(address,address,uint256)"(
@@ -481,6 +716,11 @@ export interface NFT extends BaseContract {
       tokenId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    updateListingPrice(
+      _listingPrice: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -495,15 +735,29 @@ export interface NFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    createMarketSale(
+      tokenId: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     createToken(
       tokenURI: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+      price: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    fetchItemsListed(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    fetchMarketItems(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    fetchMyNFTs(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    getListingPrice(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     isApprovedForAll(
       owner: string,
@@ -516,6 +770,12 @@ export interface NFT extends BaseContract {
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    resellToken(
+      tokenId: BigNumberish,
+      price: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     "safeTransferFrom(address,address,uint256)"(
@@ -556,6 +816,11 @@ export interface NFT extends BaseContract {
       to: string,
       tokenId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    updateListingPrice(
+      _listingPrice: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }
