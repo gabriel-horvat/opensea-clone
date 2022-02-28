@@ -19,16 +19,16 @@ const privateKey =
   fs.readFileSync(".secret").toString().trim() || "01234567890123456789";
 
 export default {
-  // defaultNetwork: "hardhat",
+  defaultNetwork: "hardhat",
   networks: {
-    // hardhat: {
-    //   chainId: 1337,
-    // },
-
-    rinkeby: {
-      url: process.env.ALCHEMY_API_URL,
-      accounts: [process.env.PRIVATE_RINKEBY_ACCOUNT_KEY],
+    hardhat: {
+      chainId: 1337,
     },
+
+    // rinkeby: {
+    //   url: "process.env.ALCHEMY_API_URL",
+    //   accounts: ["process.env.PRIVATE_RINKEBY_ACCOUNT_KEY"],
+    // },
     // mumbai: {
     //   url: "https://rpc-mumbai.matic.today",
     //   accounts: [privateKey],
